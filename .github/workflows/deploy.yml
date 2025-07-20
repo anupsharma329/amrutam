@@ -102,10 +102,6 @@ jobs:
           kubectl wait --for=condition=ready pod -l app=frontend -n production --timeout=300s
           kubectl wait --for=condition=ready pod -l app=backend -n production --timeout=300s
           
-      - name: Flush Redis Cache
-        run: |
-          kubectl exec -n production deployment/redis -- redis-cli FLUSHALL
-          
       - name: Slack notification - Deployment
         if: always()
         uses: 8398a7/action-slack@v3
