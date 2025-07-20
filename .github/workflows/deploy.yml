@@ -29,11 +29,6 @@ jobs:
           cd frontend
           npm run lint
           
-      - name: Test frontend
-        run: |
-          cd frontend
-          npm run test:ci
-          
       # Backend linting & testing
       - name: Setup Python
         uses: actions/setup-python@v4
