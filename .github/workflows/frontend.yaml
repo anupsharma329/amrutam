@@ -12,10 +12,6 @@ jobs:
   frontend-pipeline:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: amrutam/frontend
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -28,17 +24,24 @@ jobs:
           cache-dependency-path: amrutam/frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd amrutam/frontend
+          npm ci
 
       - name: Lint
-        run: npm run lint
+        run: |
+          cd amrutam/frontend
+          npm run lint
 
       - name: Test
-        run: npm run test:ci
+        run: |
+          cd amrutam/frontend
+          npm run test:ci
 
       - name: Build Docker image
         if: github.ref == 'refs/heads/main'
         run: |
+          cd amrutam/frontend
           docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }} .
           docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest .
 
