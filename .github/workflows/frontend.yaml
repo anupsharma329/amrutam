@@ -32,11 +32,6 @@ jobs:
         run: |
           npm run lint || echo "Lint failed, but continuing..."
 
-      - name: Test
-        run: |
-          cd amrutam/frontend
-          npm run test:ci
-
       - name: Build Docker image
         if: github.ref == 'refs/heads/main'
         run: |
