@@ -1,3 +1,4 @@
+import App from './App';
 import logo from './logo.svg';
 import './App.css';
 
