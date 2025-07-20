@@ -1,46 +1,81 @@
-name: CI/CD Frontend
+name: Frontend CI/CD
+
 on:
   push:
     branches: [main]
+    paths: ['frontend/**']
+  pull_request:
+    branches: [main]
+    paths: ['frontend/**']
 
 jobs:
-  frontend-build:
+  frontend-pipeline:
     runs-on: ubuntu-latest
-    env:
-      DOCKER_REGISTRY: ghcr.io
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node
+      
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-
-      - name: Install Dependencies
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
         run: |
           cd frontend
-          npm install
-
+          npm ci
+      
       - name: Lint
-        run: cd frontend && npm run lint
-
-      - name: Test
-        run: cd frontend && npm test -- --watchAll=false
-
-      - name: Docker Build
-        run: docker build -t $DOCKER_REGISTRY/org/frontend:latest ./frontend
-
-      - name: Docker Push
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login $DOCKER_REGISTRY -u ${{ github.actor }} --password-stdin
-          docker push $DOCKER_REGISTRY/org/frontend:latest
-
-      - name: Deploy to staging
-        run: ssh root@${{ secrets.STAGING_IP }} "docker pull $DOCKER_REGISTRY/org/frontend:latest && docker-compose up -d"
-
+          cd frontend
+          npm run lint
+      
+      - name: Test
+        run: |
+          cd frontend
+          npm run test:ci
+      
+      - name: Build Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd frontend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }} .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest .
+      
+      - name: Login to Docker Hub
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Push Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+      
+      - name: Deploy to Kubernetes
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 --decode > kubeconfig
+          export KUBECONFIG=kubeconfig
+          
+          # Update deployment with new image
+          kubectl set image deployment/frontend frontend=${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }} -n production
+          
+          # Wait for rollout
+          kubectl rollout status deployment/frontend -n production --timeout=300s
+          
+          # Verify deployment
+          kubectl get pods -l app=frontend -n production
+      
       - name: Slack Notification
+        if: always()
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
+          text: "Frontend deployment: ${{ job.status }} (SHA: ${{ github.sha }})"
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

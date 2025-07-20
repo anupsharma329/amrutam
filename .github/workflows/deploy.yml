@@ -1,0 +1,126 @@
+# .github/workflows/deploy.yml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Frontend linting & testing
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+          
+      - name: Lint frontend
+        run: |
+          cd frontend
+          npm run lint
+          
+      - name: Test frontend
+        run: |
+          cd frontend
+          npm run test:ci
+          
+      # Backend linting & testing
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          
+      - name: Lint backend
+        run: |
+          cd backend
+          flake8 .
+          
+      - name: Test backend
+        run: |
+          cd backend
+          python manage.py test
+          
+      - name: Slack notification - Tests
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: "Tests completed: ${{ job.status }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  build-and-deploy:
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build and push Docker images
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          
+          # Build and push frontend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }} ./frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }}
+          
+          # Build and push backend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} ./backend
+          docker push ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }}
+      
+      - name: Setup Kubernetes Access
+        run: |
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 --decode > kubeconfig
+          export KUBECONFIG=kubeconfig
+          kubectl cluster-info
+      
+      - name: Deploy to Kubernetes
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          # Update deployment images
+          kubectl set image deployment/frontend frontend=${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }} -n production
+          kubectl set image deployment/backend backend=${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} -n production
+          
+          # Wait for rollout
+          kubectl rollout status deployment/frontend -n production --timeout=300s
+          kubectl rollout status deployment/backend -n production --timeout=300s
+          
+      - name: Verify Deployment Health
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          # Check pod status
+          kubectl get pods -n production
+          
+          # Wait for pods to be ready
+          kubectl wait --for=condition=ready pod -l app=frontend -n production --timeout=300s
+          kubectl wait --for=condition=ready pod -l app=backend -n production --timeout=300s
+          
+      - name: Flush Redis Cache
+        run: |
+          kubectl exec -n production deployment/redis -- redis-cli FLUSHALL
+          
+      - name: Slack notification - Deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: "Deployment completed: ${{ job.status }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

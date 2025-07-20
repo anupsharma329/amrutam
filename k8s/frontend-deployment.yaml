@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
+  namespace: production
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: frontend
@@ -14,6 +15,13 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/org/frontend:latest
+        image: anupsharma329/frontend:test  # This will be updated by GitHub Actions
         ports:
         - containerPort: 3000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
