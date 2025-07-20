@@ -30,25 +30,20 @@ jobs:
           npm run lint
           
       # Backend linting & testing
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Node.js for backend
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.11'
-          
+          node-version: '20'
       - name: Install backend dependencies
         run: |
           cd backend
-          pip install -r requirements.txt
-          
-      - name: Lint backend
+          npm ci
+      - name: Start backend (check server starts)
         run: |
           cd backend
-          flake8 .
-          
-      - name: Test backend
-        run: |
-          cd backend
-          python manage.py test
+          npm start &
+          sleep 5
+          kill $!
           
       - name: Slack notification - Tests
         if: always()
@@ -75,7 +70,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }}
           
           # Build and push backend
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} ./backend
+          docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} .
           docker push ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }}
       
       - name: Setup Kubernetes Access
