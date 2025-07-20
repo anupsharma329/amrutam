@@ -1,0 +1,46 @@
+name: CI/CD Backend
+on:
+  push:
+    branches: [main]
+
+jobs:
+  backend-build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_REGISTRY: ghcr.io
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+
+      - name: Lint
+        run: flake8 backend/
+
+      - name: Test
+        run: pytest backend/
+
+      - name: Docker build
+        run: |
+          docker build -t $DOCKER_REGISTRY/org/backend:latest ./backend
+
+      - name: Docker push
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login $DOCKER_REGISTRY -u ${{ github.actor }} --password-stdin
+          docker push $DOCKER_REGISTRY/org/backend:latest
+
+      - name: Deploy to staging
+        run: ssh root@${{ secrets.STAGING_IP }} "docker pull $DOCKER_REGISTRY/org/backend:latest && docker-compose up -d"
+
+      - name: Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
