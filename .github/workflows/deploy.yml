@@ -10,6 +10,9 @@ on:
       - 'frontend/**'
       - '.github/workflows/deploy.yml'
 
+permissions:
+  contents: write
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
