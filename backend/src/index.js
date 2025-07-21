@@ -14,3 +14,5 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }); 
+const redis = require('redis');
+const client = redis.createClient({ url: 'redis://redis:6379' });
