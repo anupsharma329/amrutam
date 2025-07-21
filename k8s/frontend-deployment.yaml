@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: anupsharma329/frontend:test3  # This will be updated by GitHub Actions
+        image: anupsharma329/frontend:frontend-851eb3a71ab21e9225b864398e2381fdd57f8c59
         ports:
         - containerPort: 3000
         resources:
