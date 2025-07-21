@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: anupsharma329/backend:test1  # Use your test image
+        image: anupsharma329/backend:test2  # Use your test image
         ports:
         - containerPort: 4000   # <--- Your Node.js app listens here
         resources:
