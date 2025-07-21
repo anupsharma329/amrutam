@@ -8,7 +8,7 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
-      - '.github/workflows/deploy.yaml'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   lint-and-test:
