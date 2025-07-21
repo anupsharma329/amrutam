@@ -83,8 +83,8 @@ jobs:
         id: backend_image
         run: |
           BACKEND_TAG=backend-${{ github.sha }}
-          docker build -t anupsharma329/amrutum-backend:$BACKEND_TAG backend/
-          docker push anupsharma329/amrutum-backend:$BACKEND_TAG
+          docker build -t anupsharma329/backend:$BACKEND_TAG backend/
+          docker push anupsharma329/backend:$BACKEND_TAG
           echo "BACKEND_TAG=$BACKEND_TAG" >> $GITHUB_ENV
 
       # Build and push frontend image
