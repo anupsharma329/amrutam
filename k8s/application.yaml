@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: amrutum
+  name: amrutam
   namespace: argocd
 spec:
   project: default

@@ -2,6 +2,6 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div> Hello World this is anupsharma project </div>
+    <div> Hello, This is my Next.js frontend! </div>
   );
 }
