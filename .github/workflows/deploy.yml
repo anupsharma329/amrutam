@@ -92,19 +92,19 @@ jobs:
         id: frontend_image
         run: |
           FRONTEND_TAG=frontend-${{ github.sha }}
-          docker build -t anupsharma329/amrutum-frontend:$FRONTEND_TAG frontend/
-          docker push anupsharma329/amrutum-frontend:$FRONTEND_TAG
+          docker build -t anupsharma329/frontend:$FRONTEND_TAG frontend/
+          docker push anupsharma329/frontend:$FRONTEND_TAG
           echo "FRONTEND_TAG=$FRONTEND_TAG" >> $GITHUB_ENV
 
       # Update backend manifest
       - name: Update backend manifest
         run: |
-          sed -i "s|image: anupsharma329/amrutum-backend:.*|image: anupsharma329/amrutum-backend:${BACKEND_TAG}|" k8s/backend-deployment.yaml
+          sed -i "s|image: anupsharma329/backend:.*|image: anupsharma329/backend:${BACKEND_TAG}|" k8s/backend-deployment.yaml
 
       # Update frontend manifest
       - name: Update frontend manifest
         run: |
-          sed -i "s|image: anupsharma329/amrutum-frontend:.*|image: anupsharma329/amrutum-frontend:${FRONTEND_TAG}|" k8s/frontend-deployment.yaml
+          sed -i "s|image: anupsharma329/frontend:.*|image: anupsharma329/frontend:${FRONTEND_TAG}|" k8s/frontend-deployment.yaml
 
       # Commit and push manifest changes
       - name: Commit and push manifest changes
