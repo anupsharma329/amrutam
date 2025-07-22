@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: anupsharma329/frontend:frontend-f61458a7dee95a37f2778c2170feb5ba42c145b0
+        image: anupsharma329/frontend:frontend-47b4abb2114eae3f47d0a104d8387c4e2442d2a1
         ports:
         - containerPort: 3000
         resources:
