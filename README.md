@@ -78,6 +78,48 @@ npm run dev
 
 ---
 
+## ☸️ Kubernetes Commands
+
+Here are some useful commands to work with the Kubernetes manifests in this project:
+
+### Apply all manifests in the k8s folder
+```bash
+kubectl apply -f k8s/
+```
+
+### Apply a specific manifest (e.g., backend deployment)
+```bash
+kubectl apply -f k8s/backend/deployment.yaml
+```
+
+### Check the status of all pods
+```bash
+kubectl get pods
+```
+
+### Check the status of all services
+```bash
+kubectl get svc
+```
+
+### View logs for a specific pod
+```bash
+kubectl logs <pod-name>
+```
+
+### Describe a deployment or service
+```bash
+kubectl describe deployment <deployment-name>
+kubectl describe service <service-name>
+```
+
+### Delete all resources in the k8s folder
+```bash
+kubectl delete -f k8s/
+```
+
+---
+
 ## ⚡ CI/CD
 
 - **GitHub Actions**:  

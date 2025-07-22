@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('Hello, This is my Node.js Application!');
+  res.send('Hello, This is my Node.js App !');
 });
 
 const PORT = process.env.PORT || 4000;
