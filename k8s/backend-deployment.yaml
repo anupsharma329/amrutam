@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: anupsharma329/backend:backend-1548b4a2d27097e6b4642c88efbed855cadd58fe
+        image: anupsharma329/backend:backend-ab2c38a21871073a26ddf4c1d0941a563bb0454c
         ports:
         - containerPort: 4000   # <--- Your Node.js app listens here
         resources:
